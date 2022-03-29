@@ -12,28 +12,36 @@ namespace SWAPI_Exercise
     {
         static void Main(string[] args)
         {
-            GetStarShips();
+            GetStarShipsAndPilots();
         }
 
-        public static void GetStarShips()
-        {
-            string url = "https://swapi.dev/api/";
+        public static void GetStarShipsAndPilots()
+        {           
+            Utility utility = new Utility();
 
-            var starships = new RestClient(url);
-            var request = new RestRequest("starships", Method.Get);
-            request.AddHeader("Accept", "application/json");
-            request.RequestFormat = DataFormat.Json;
+            var JsonStarshipResult = JsonConvert.DeserializeObject<StarshipRootobject>(utility.RestRequest("https://swapi.dev/api/starships")).results;
 
-            var response = starships.ExecuteAsync(request);
-
-            string content = response.Result.Content;
-            
-            dynamic JsonResult = JsonConvert.DeserializeObject(content);
-
-            foreach(var item in JsonResult.results)
+            foreach (var item in JsonStarshipResult)
             {
-                Console.WriteLine("");             
+                string pilotName = String.Empty;
+                
+                if (item.name.Length >= 10)
+                {
+                    foreach (var pilots in item.pilots)
+                    {                           
+                        var JsonPilotResult = JsonConvert.DeserializeObject<PersonResult>(utility.RestRequest(pilots)).name;
+                        pilotName = string.IsNullOrEmpty(pilotName) ? pilotName + " " + JsonPilotResult : pilotName + ", " + JsonPilotResult;                       
+                    }
+
+                    if (string.IsNullOrEmpty(pilotName))
+                    {
+                        pilotName = "No Name.";
+                    }
+
+                    Console.WriteLine("Starship: " + item.name + " - Pilot Name(s): " + pilotName);
+                }                
             }
         }
     }
 }
+
